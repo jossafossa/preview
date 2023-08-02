@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Preview Demo</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>Preview Demo</h1>
+
+    <form id="previewForm">
+      <label for="urlInput">Enter URLs (one per line):</label>
+      <textarea id="urlInput" required></textarea>
+      <button type="submit">Get Preview Data</button>
+    </form>
+
+    <div class="results">
+      <!-- results should be here -->
+    </div>
+
+    <template data-template>
+      <a href="" data-url>
+        <article class="card-link">
+          <header>
+            <span class="clipboard-link" data-clipboard-link href="" data-url>
+              Copy
+            </span>
+            <picture>
+              <img data-image />
+            </picture>
+          </header>
+          <section>
+            <p data-title></p>
+            <!-- <p data-meta-description></p> -->
+            <!-- <p data-link></p> -->
+          </section>
+        </article>
+      </a>
+    </template>
+
+    <script>
+      class Preview {
+        constructor() {
+          this.template = document.querySelector("[data-template]");
+          this.resultsElement = document.querySelector(".results");
+        }
+
+        async get(url) {
+          const formData = new FormData();
+          formData.append("url", url);
+
+          const response = await fetch("preview.php", {
+            method: "POST",
+            body: formData,
+          });
+
+          let json = "";
+          try {
+            json = await response.json();
+          } catch (error) {
+            json = null;
+            console.error(error);
+          }
+
+          return json;
+        }
+
+        async render(urls) {
+          this.resultsElement.innerHTML = "";
+
+          let promised = [];
+          for (const url of urls) {
+            promised.push(this.get(url));
+          }
+
+          console.log(promised);
+
+          const results = await Promise.all(promised);
+
+          console.log(results);
+
+          for (const data of results) {
+            let html = this.getHTML(data);
+
+            if (!html) {
+              continue;
+            }
+
+            this.resultsElement.appendChild(html);
+          }
+        }
+
+        getHTML(data) {
+          if (!data) {
+            return null;
+          }
+
+          const clone = this.template.content.cloneNode(true);
+
+          let imageElement = clone.querySelector("[data-image]");
+          let titleElement = clone.querySelector("[data-title]");
+          let metaDescriptionElement = clone.querySelector(
+            "[data-meta-description]"
+          );
+          let linkElement = clone.querySelector("[data-link]");
+          let urlElement = clone.querySelectorAll("[data-url]");
+
+          if (imageElement) imageElement.src = data.thumbnail;
+          if (titleElement) titleElement.textContent = data.title;
+          if (metaDescriptionElement)
+            metaDescriptionElement.textContent = data.metaDescription;
+          if (linkElement) linkElement.textContent = data.url;
+          urlElement.forEach((element) => {
+            element.href = data.url;
+          });
+
+          // clone.querySelector('[data-title]').textContent = data.title;
+          // clone.querySelector('[data-meta-description]').textContent = data.metaDescription;
+          // clone.querySelector('[data-link]').textContent = data.url;
+          // clone.querySelector('[data-url]').href = data.url;
+
+          return clone;
+        }
+      }
+
+      // Retrieve the stored value from localStorage
+      const storedValue = localStorage.getItem("urlInputValue");
+
+      // Set the value of the textarea if a stored value exists
+      if (storedValue) {
+        const urlInput = document.getElementById("urlInput");
+        urlInput.value = storedValue;
+      }
+
+      // Store the textarea value in localStorage on form submit
+      document
+        .getElementById("previewForm")
+        .addEventListener("submit", function (event) {
+          const urlInput = document.getElementById("urlInput");
+          localStorage.setItem("urlInputValue", urlInput.value);
+        });
+
+      const preview = new Preview();
+      let updated = false;
+      let update = (event) => {
+        updated = true;
+
+        const urlInput = document.getElementById("urlInput");
+        const urls = urlInput.value
+          .split("\n")
+          .map((url) => url.trim())
+          .filter((url) => url !== "");
+
+        preview.render(urls);
+      };
+
+      document.getElementById("previewForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        update();
+      });
+
+      update();
+
+      class ClipboardLink {
+        constructor() {
+          document.addEventListener("click", e => {
+            if (e.target.matches("[data-clipboard-link]")) {
+              e.preventDefault();
+              this.copyLinkToClipboard(e.target);
+            }
+          })
+        }
+
+        addEventListeners() {
+          this.links.forEach((link) => {
+            link.addEventListener("click", (event) => {
+              event.preventDefault();
+              this.copyLinkToClipboard(link);
+            });
+          });
+        }
+
+        copyLinkToClipboard(link) {
+          console.log("Copying link to clipboard:", link.href);
+          const tempInput = document.createElement("input");
+          tempInput.style.position = "fixed";
+          tempInput.style.opacity = 0;
+          tempInput.value = link.href;
+          document.body.appendChild(tempInput);
+
+          tempInput.select();
+          document.execCommand("copy");
+          document.body.removeChild(tempInput);
+
+          console.log("Link copied to clipboard:", link.href);
+        }
+      }
+      
+      new ClipboardLink();
+
+    </script>
+  </body>
+</html>
