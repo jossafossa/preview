@@ -1,4 +1,23 @@
 <?php
+error_reporting(0);
+
+if (isset($_SERVER['HTTP_ORIGIN'])) {
+  //header("Access-Control-Allow-Origin: {$_SERVER['HTTP_ORIGIN']}");
+  header("Access-Control-Allow-Origin: *");
+  header('Access-Control-Allow-Credentials: true');
+  header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+}
+if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+  if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_METHOD']))
+    header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+  if (isset($_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']))
+    header("Access-Control-Allow-Headers:{$_SERVER['HTTP_ACCESS_CONTROL_REQUEST_HEADERS']}");
+
+  exit(0);
+}
+?>
+
+<?php
 function getPreviewData($url) {
   $data = array(
     'title' => '',
@@ -12,8 +31,8 @@ function getPreviewData($url) {
     'http' => array(
       'method' => "GET",
       'header' => "Accept-language: en\r\n" .
-                  "Cookie: foo=bar\r\n" .
-                  "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36\r\n"  // Updated User-Agent
+        "Cookie: foo=bar\r\n" .
+        "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.107 Safari/537.36\r\n"  // Updated User-Agent
     )
   );
 
@@ -44,3 +63,4 @@ if (isset($_POST['url'])) {
   $previewData = getPreviewData($url);
   echo json_encode($previewData);
 }
+?>
