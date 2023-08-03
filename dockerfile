@@ -2,7 +2,7 @@
 FROM php:latest
 
 # Set the working directory inside the container
-WORKDIR /html
+WORKDIR /var/www/html/
 
 # Copy your PHP files to the container
 COPY . /var/www/html/
@@ -11,4 +11,4 @@ COPY . /var/www/html/
 EXPOSE 80
 
 # Start the PHP server when the container runs
-CMD ["php", "-S", "0.0.0.0:80"]
+CMD ["php", "-S", "127.0.0.1:80"]

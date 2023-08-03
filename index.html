@@ -162,12 +162,12 @@
 
       class ClipboardLink {
         constructor() {
-          document.addEventListener("click", e => {
+          document.addEventListener("click", (e) => {
             if (e.target.matches("[data-clipboard-link]")) {
               e.preventDefault();
               this.copyLinkToClipboard(e.target);
             }
-          })
+          });
         }
 
         addEventListeners() {
@@ -194,9 +194,8 @@
           console.log("Link copied to clipboard:", link.href);
         }
       }
-      
-      new ClipboardLink();
 
+      new ClipboardLink();
     </script>
   </body>
 </html>
